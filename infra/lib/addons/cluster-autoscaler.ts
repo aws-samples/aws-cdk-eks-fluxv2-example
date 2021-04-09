@@ -14,7 +14,7 @@ export class ClusterAutoscaler extends cdk.Construct {
     this.namespace = 'cluster-autoscaler';
 
     // Create namespace for CA
-    props.cluster.addManifest('CANamespace',
+    const ns = props.cluster.addManifest('CANamespace',
       {
         apiVersion: 'v1',
         kind: 'Namespace',
@@ -28,6 +28,8 @@ export class ClusterAutoscaler extends cdk.Construct {
     const sa = props.cluster.addServiceAccount('cluster-autoscaler', {
       namespace: this.namespace
     });
+
+    sa.node.addDependency(ns);
 
     const caPolicy = new iam.Policy(this, 'CAPolicy', {
       roles: [sa.role],
@@ -58,7 +60,7 @@ export class ClusterAutoscaler extends cdk.Construct {
       ]
     });
 
-    props.cluster.addHelmChart('CAHelm', {
+    const chart = props.cluster.addHelmChart('CAHelm', {
       chart: 'cluster-autoscaler-chart',
       release: 'ca',
       repository: 'https://kubernetes.github.io/autoscaler',
@@ -80,5 +82,6 @@ export class ClusterAutoscaler extends cdk.Construct {
         }
       }
     });
+    chart.node.addDependency(ns);
   }
 }
