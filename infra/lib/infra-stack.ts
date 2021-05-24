@@ -76,7 +76,6 @@ export class InfraStack extends cdk.Stack {
     new FluxV2(this, 'FluxV2', {
       cluster: cluster,
       secretName: 'github-keypair',
-      fluxVersion: "v0.10.0",
       repoUrl: repoUrl.valueAsString,
       repoBranch: repoBranch.valueAsString,
       repoPath: repoPath.valueAsString
