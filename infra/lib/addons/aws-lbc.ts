@@ -23,9 +23,9 @@ export class AWSLoadBalancerController extends cdk.Construct {
 
     const awsLbcCrdsUrl = 'https://raw.githubusercontent.com/aws/eks-charts/master/stable/aws-load-balancer-controller/crds/crds.yaml'
     const awsLbcCrdsManifest = yaml.loadAll(request.default('GET', awsLbcCrdsUrl).getBody().toString());
-    props.cluster.addManifest('awsLbcCrdManifest', ...awsLbcCrdsManifest);
+    const awsLbcCrdsManifestResource = props.cluster.addManifest('awsLbcCrdManifest', ...awsLbcCrdsManifest);
     
-    props.cluster.addHelmChart('AWSLBCHelmChart', {
+    const chart = props.cluster.addHelmChart('AWSLBCHelmChart', {
       chart: 'aws-load-balancer-controller',
       release: 'aws-load-balancer-controller',
       repository: 'https://aws.github.io/eks-charts',
@@ -42,5 +42,6 @@ export class AWSLoadBalancerController extends cdk.Construct {
         }
       }
     });
+    chart.node.addDependency(awsLbcCrdsManifestResource);
   }
 }
