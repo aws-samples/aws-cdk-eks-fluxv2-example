@@ -70,7 +70,7 @@ export class FluxV2 extends cdk.Construct {
         namespace: 'flux-system'
       },
       spec: {
-        interval: '1m0s',
+        interval: '10m0s',
         ref: {
           branch: props.repoBranch,
         },
