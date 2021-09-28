@@ -115,7 +115,7 @@ Create an AWS Codecommit repository using
 aws codecommit create-repository --repository-name MyDemoRepo --repository-description "My demonstration repository"
 ```
 
-Setup your git credentials in AWS IAM following those [instructions](https://docs.aws.amazon.com/codecommit/latest/userguide/setting-up-gc.html).
+Setup your git credentials in AWS IAM following those [instructions](https://docs.aws.amazon.com/codecommit/latest/userguide/setting-up-gc.html) (Steps 1, 2, 3 only).
 
 Clone the repository using the below command. Replace `YOUR-AWS_REGION` with your AWS region (e.g. eu-west-1). Use your newly created git credentials when asked for.
 ```
@@ -126,11 +126,9 @@ git clone https://git-codecommit.<YOUR-AWS_REGION>.amazonaws.com/v1/repos/MyDemo
 
 Clone the repository `git clone https://github.com/aws-samples/aws-cdk-eks-fluxv2-example.git ./github-repository`
 
-copy the content to our AWS Codecommit repository `cp github-repository/k8s-config  my-demo-repo/k8s-config`
+copy the content to our AWS Codecommit repository `(mkdir my-demo-repo/k8s-config; cp -R github-repository/k8s-config/* my-demo-repo/k8s-config) &`
 
-Commit the changes `cd my-demo-repo & git commit -m "first commit"`
-
-Push the changes `git push`
+Commit and push the changes `(cd my-demo-repo; git add .; git commit -m "first commit"; git push) &`
 
 #### 4.3. Setting up the SSH connection to AWS Codecommit
 
@@ -138,12 +136,12 @@ Follow Step 3 of on this [page](https://docs.aws.amazon.com/codecommit/latest/us
 
 #### 4.4. Deploy the infrastructure
 
-Jump into the the `infra/` directory and deploy the CDK stack, passing along a set of parameters to
+Jump into the the `github-repository/infra/` directory and deploy the CDK stack, passing along a set of parameters to
 the CDK command. These parameters define which git repository, branch, and path in that repository
 that will be used for initial flux bootstrapping of the cluster.
 
 ```shell
-cd infra/
+cd github-repository/infra/
 
 npm i
 
@@ -154,6 +152,7 @@ cdk deploy InfraStack \
 ```
 
 ### 4.5. Create a Kubernetes secret
+Use the following script to craft and apply the secret to the flux-system namespace
 
 ```bash
 #!/bin/sh
@@ -162,7 +161,7 @@ apiVersion: v1
 kind: Secret
 type: Opaque
 metadata:
-  name: codecommit-keypair
+  name: github-keypair
   namespace: flux-system
 data:
   known_hosts: $(ssh-keyscan -t rsa git-codecommit.<YOUR-AWS-REGION>.amazonaws.com 2>/dev/null|grep -E '^git-codecommit.<YOUR-AWS-REGION>.amazonaws\.com'|base64 | tr -d '\n')
