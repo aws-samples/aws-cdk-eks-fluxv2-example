@@ -105,6 +105,72 @@ podinfo-746d58c87-gjkdl   1/1     Running   0          2m3s
 podinfo-746d58c87-qfjwk   1/1     Running   0          2m3s
 ```
 
+### 4. (Alternative) Using AWS CodeCommit for source control
+You can also use [AWS CodeCommit](https://aws.amazon.com/codecommit/) to host your private repository. In order to do so, follow the step below.
+
+#### 4.1. Create and clone your AWS Codecommit repository
+
+Create an AWS Codecommit repository using 
+```
+aws codecommit create-repository --repository-name MyDemoRepo --repository-description "My demonstration repository"
+```
+
+Setup your git credentials in AWS IAM following those [instructions](https://docs.aws.amazon.com/codecommit/latest/userguide/setting-up-gc.html).
+
+Clone the repository using the below command. Replace `YOUR-AWS_REGION` with your AWS region (e.g. eu-west-1). Use your newly created git credentials when asked for.
+```
+git clone https://git-codecommit.<YOUR-AWS_REGION>.amazonaws.com/v1/repos/MyDemoRepo my-demo-repo
+```
+
+#### 4.2. Copy and Push the GitHub repository content to your new repository
+
+Clone the repository `git clone https://github.com/aws-samples/aws-cdk-eks-fluxv2-example.git ./github-repository`
+
+copy the content to our AWS Codecommit repository `cp github-repository/k8s-config  my-demo-repo/k8s-config`
+
+Commit the changes `cd my-demo-repo & git commit -m "first commit"`
+
+Push the changes `git push`
+
+#### 4.3. Setting up the SSH connection to AWS Codecommit
+
+Follow Step 3 of on this [page](https://docs.aws.amazon.com/codecommit/latest/userguide/setting-up-ssh-unixes.html) of the AWS Codecommit documentation.
+
+#### 4.4. Deploy the infrastructure
+
+Jump into the the `infra/` directory and deploy the CDK stack, passing along a set of parameters to
+the CDK command. These parameters define which git repository, branch, and path in that repository
+that will be used for initial flux bootstrapping of the cluster.
+
+```shell
+cd infra/
+
+npm i
+
+cdk deploy InfraStack \
+  --parameters FluxRepoURL="ssh://<YOUR_SSH_KEY_ID>@git-codecommit.<YOUR_AWS_REGION>.amazonaws.com/v1/repos/MyDemoRepo" \
+  --parameters FluxRepoBranch="master" \
+  --parameters FluxRepoPath="./k8s-config/clusters/demo"
+```
+
+### 4.5. Create a Kubernetes secret
+
+```bash
+#!/bin/sh
+cat <<EOF | kubectl -n flux-system apply -f -
+apiVersion: v1
+kind: Secret
+type: Opaque
+metadata:
+  name: codecommit-keypair
+  namespace: flux-system
+data:
+  known_hosts: $(ssh-keyscan -t rsa git-codecommit.<YOUR-AWS-REGION>.amazonaws.com 2>/dev/null|grep -E '^git-codecommit.<YOUR-AWS-REGION>.amazonaws\.com'|base64 | tr -d '\n')
+  identity: $(cat ${HOME}/.ssh/codecommit_rsa |base64 | tr -d '\n')
+  'identity.pub': $(cat ${HOME}/.ssh/codecommit_rsa.pub|base64 | tr -d '\n')
+EOF
+```
+
 ## Security
 
 See [CONTRIBUTING](CONTRIBUTING.md) for more information.

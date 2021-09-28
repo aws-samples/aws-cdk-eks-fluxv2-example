@@ -60,6 +60,12 @@ export class FluxV2 extends cdk.Construct {
     // Actually install Flux components onto the cluster
     const fluxRelease = new FluxRelease(props.fluxVersion);
     const fluxManifest = props.cluster.addManifest('fluxManifest', ...fluxRelease.getManifest());
+    let gitImplementation: string = 'go-git';
+
+    //Use the git library libgit2 if AWS Codecommit is used
+    if(props.repoUrl.includes('@git-codecommit.')){
+      gitImplementation = 'libgit2';
+    }
 
     // Bootstrap manifests
     const gitRepoManifest = props.cluster.addManifest('GitRepoSelf', {
@@ -77,7 +83,8 @@ export class FluxV2 extends cdk.Construct {
         secretRef: {
           name: props.secretName
         },
-        url: props.repoUrl
+        url: props.repoUrl,
+        gitImplementation: gitImplementation
       }  
     });
     gitRepoManifest.node.addDependency(fluxManifest);
