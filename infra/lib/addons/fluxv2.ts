@@ -1,9 +1,10 @@
-import cdk = require('@aws-cdk/core');
-import eks = require('@aws-cdk/aws-eks');
+import { Construct } from 'constructs';
+import { aws_iam as iam, StackProps } from 'aws-cdk-lib';
+import { aws_eks as eks } from 'aws-cdk-lib';
 import * as yaml from 'js-yaml';
 import * as request from 'sync-request';
 
-export interface FluxV2Props extends cdk.StackProps {
+export interface FluxV2Props extends StackProps {
   cluster: eks.Cluster;
   fluxVersion?: string;
   secretName: string;
@@ -53,8 +54,8 @@ class FluxRelease {
   }
 }
 
-export class FluxV2 extends cdk.Construct {
-  constructor(scope: cdk.Construct, id: string, props: FluxV2Props) {
+export class FluxV2 extends Construct {
+  constructor(scope: Construct, id: string, props: FluxV2Props) {
     super(scope, id);
 
     // Actually install Flux components onto the cluster

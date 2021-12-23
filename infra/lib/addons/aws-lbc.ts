@@ -1,16 +1,16 @@
-import cdk = require('@aws-cdk/core');
-import eks = require('@aws-cdk/aws-eks');
-import iam = require('@aws-cdk/aws-iam');
+import { Construct } from 'constructs';
+import { Aws, aws_iam as iam, StackProps } from 'aws-cdk-lib';
+import { aws_eks as eks } from 'aws-cdk-lib';
 import * as yaml from 'js-yaml';
 import * as request from 'sync-request';
 
-export interface AWSLoadBalancerControllerProps extends cdk.StackProps {
+export interface AWSLoadBalancerControllerProps extends StackProps {
   cluster: eks.Cluster;
   namespace: string;
 }
 
-export class AWSLoadBalancerController extends cdk.Construct {
-  constructor(scope: cdk.Construct, id: string, props: AWSLoadBalancerControllerProps) {
+export class AWSLoadBalancerController extends Construct {
+  constructor(scope: Construct, id: string, props: AWSLoadBalancerControllerProps) {
     super(scope, id);
 
     const sa = props.cluster.addServiceAccount('aws-lbc', {
@@ -18,7 +18,7 @@ export class AWSLoadBalancerController extends cdk.Construct {
     });
 
     sa.role.addManagedPolicy({
-      managedPolicyArn: `arn:aws:iam::${cdk.Aws.ACCOUNT_ID}:policy/AWSLoadBalancerControllerIAMPolicy`
+      managedPolicyArn: `arn:aws:iam::${Aws.ACCOUNT_ID}:policy/AWSLoadBalancerControllerIAMPolicy`
     });
 
     const awsLbcCrdsUrl = 'https://raw.githubusercontent.com/aws/eks-charts/master/stable/aws-load-balancer-controller/crds/crds.yaml'

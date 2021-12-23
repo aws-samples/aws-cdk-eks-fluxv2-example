@@ -1,14 +1,14 @@
-import cdk = require('@aws-cdk/core');
-import eks = require('@aws-cdk/aws-eks');
-import iam = require('@aws-cdk/aws-iam');
+import { Construct } from 'constructs';
+import { Aws, aws_iam as iam, StackProps } from 'aws-cdk-lib';
+import { aws_eks as eks } from 'aws-cdk-lib';
 
-export interface ClusterAutoscalerProps extends cdk.StackProps {
+export interface ClusterAutoscalerProps extends StackProps {
   cluster: eks.Cluster
 }
 
-export class ClusterAutoscaler extends cdk.Construct {
+export class ClusterAutoscaler extends Construct {
   private namespace: string;
-  constructor(scope: cdk.Construct, id: string, props: ClusterAutoscalerProps) {
+  constructor(scope: Construct, id: string, props: ClusterAutoscalerProps) {
     super(scope, id);
 
     this.namespace = 'cluster-autoscaler';
@@ -70,7 +70,7 @@ export class ClusterAutoscaler extends cdk.Construct {
         'autoDiscovery': {
           'clusterName': `${props.cluster.clusterName}`
         },
-        'awsRegion': cdk.Aws.REGION,
+        'awsRegion': Aws.REGION,
         'rbac': {
           'serviceAccount': {
             'create': false,

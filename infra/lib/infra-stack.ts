@@ -1,25 +1,25 @@
-import * as cdk from '@aws-cdk/core';
-import ec2 = require('@aws-cdk/aws-ec2');
-import iam = require('@aws-cdk/aws-iam');
-import eks = require('@aws-cdk/aws-eks');
+import { aws_ec2 as ec2, CfnParameter, Stack, StackProps } from 'aws-cdk-lib';
+import { Construct } from 'constructs';
+import { aws_iam as iam } from 'aws-cdk-lib';
+import { aws_eks as eks } from 'aws-cdk-lib';
 import { ClusterAutoscaler } from './addons/cluster-autoscaler';
 import { FluxV2 } from './addons/fluxv2';
 import { AWSLoadBalancerController } from './addons/aws-lbc';
 
-export class InfraStack extends cdk.Stack {
-  constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
+export class InfraStack extends Stack {
+  constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
-    const repoUrl = new cdk.CfnParameter(this, 'FluxRepoURL', {
+    const repoUrl = new CfnParameter(this, 'FluxRepoURL', {
       type: 'String',
       description: "The URL to the git repository to use for Flux"
     });
-    const repoBranch = new cdk.CfnParameter(this, 'FluxRepoBranch', {
+    const repoBranch = new CfnParameter(this, 'FluxRepoBranch', {
       type: 'String',
       description: "Branch to use from the repository",
       default: "main"
     });
-    const repoPath = new cdk.CfnParameter(this, 'FluxRepoPath', {
+    const repoPath = new CfnParameter(this, 'FluxRepoPath', {
       type: 'String',
       description: 'Which path to start the sync from'
     });
