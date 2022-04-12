@@ -1,8 +1,6 @@
 import { Construct } from 'constructs';
-import { Aws, aws_iam as iam, StackProps } from 'aws-cdk-lib';
+import { Aws, StackProps } from 'aws-cdk-lib';
 import { aws_eks as eks } from 'aws-cdk-lib';
-import * as yaml from 'js-yaml';
-import * as request from 'sync-request';
 
 export interface AWSLoadBalancerControllerProps extends StackProps {
   cluster: eks.Cluster;
@@ -21,10 +19,6 @@ export class AWSLoadBalancerController extends Construct {
       managedPolicyArn: `arn:aws:iam::${Aws.ACCOUNT_ID}:policy/AWSLoadBalancerControllerIAMPolicy`
     });
 
-    const awsLbcCrdsUrl = 'https://raw.githubusercontent.com/aws/eks-charts/master/stable/aws-load-balancer-controller/crds/crds.yaml'
-    const awsLbcCrdsManifest = yaml.loadAll(request.default('GET', awsLbcCrdsUrl).getBody().toString());
-    const awsLbcCrdsManifestResource = props.cluster.addManifest('awsLbcCrdManifest', awsLbcCrdsManifest);
-    
     const chart = props.cluster.addHelmChart('AWSLBCHelmChart', {
       chart: 'aws-load-balancer-controller',
       release: 'aws-load-balancer-controller',
@@ -42,6 +36,5 @@ export class AWSLoadBalancerController extends Construct {
         }
       }
     });
-    chart.node.addDependency(awsLbcCrdsManifestResource);
   }
 }
