@@ -44,23 +44,44 @@ class FluxRelease {
     return this.manifestUrl;
   }
 
-  public getManifest(): any {
-    this.installManifest = yaml.loadAll(
-      request.default('GET', this.manifestUrl)
-        .getBody()
-        .toString()
+  public getManifests(): Record<string, any>[] {
+    this.installManifest = [];
+    yaml.loadAll(
+      request.default('GET', this.manifestUrl).getBody().toString(),
+      (doc) => {
+        const x = doc as Record<string, any>;
+        this.installManifest.push(x);
+      }
     );
     return this.installManifest;
   }
+
 }
 
 export class FluxV2 extends Construct {
   constructor(scope: Construct, id: string, props: FluxV2Props) {
     super(scope, id);
 
-    // Actually install Flux components onto the cluster
+    /**
+     * Actually installs Flux components onto the cluster. While perhaps not the prettiest implementation,
+     * it should do the trick. We are breaking down the full install manifest into individual resources
+     * so that they get applied individually, this way we avoid sending a too large payload to lambda.
+     * 
+     * We're also setting up ordered resource dependencies given the structure of the install.yaml, ensuring
+     * our namespace is in place before we try applying other resources. With additional work the actual
+     * dependencies could be identified and set up in detail to parallelize the effort of applying
+     * the rest of the resources in the full manifest.
+     */
     const fluxRelease = new FluxRelease(props.fluxVersion);
-    const fluxManifest = props.cluster.addManifest('fluxManifest', ...fluxRelease.getManifest());
+    const fluxResourceManifests = fluxRelease.getManifests();
+    const fluxResourceNodes: Construct[] = [];
+    fluxResourceManifests.forEach((m, i) => {
+      const manifestResource = props.cluster.addManifest(`flux-${i}`, m);
+      if (fluxResourceNodes.length > 0) {
+        manifestResource.node.addDependency(fluxResourceNodes[fluxResourceNodes.length - 1]);
+      }
+      fluxResourceNodes.push(manifestResource);
+    });
 
     // Bootstrap manifests
     const gitRepoManifest = props.cluster.addManifest('GitRepoSelf', {
@@ -81,7 +102,8 @@ export class FluxV2 extends Construct {
         url: props.repoUrl
       }  
     });
-    gitRepoManifest.node.addDependency(fluxManifest);
+    gitRepoManifest.node.addDependency(fluxResourceNodes[fluxResourceNodes.length - 1]);
+   
     const kustomizationManifest = props.cluster.addManifest('KustomizationSelf', {
       apiVersion: 'kustomize.toolkit.fluxcd.io/v1beta1',
       kind: 'Kustomization',
@@ -100,6 +122,6 @@ export class FluxV2 extends Construct {
         validation: 'client'
       }
     });
-    kustomizationManifest.node.addDependency(fluxManifest);
+    kustomizationManifest.node.addDependency(fluxResourceNodes[fluxResourceNodes.length - 1]);
   }
 }
