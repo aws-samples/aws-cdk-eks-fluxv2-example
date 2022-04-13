@@ -80,9 +80,9 @@ metadata:
   name: github-keypair
   namespace: flux-system
 data:
-  known_hosts: $(ssh-keyscan -t rsa github.com 2>/dev/null|grep -E '^github\.com'|base64)
-  identity: $(cat ${HOME}/.ssh/demo_key_rsa|base64)
-  'identity.pub': $(cat ${HOME}/.ssh/demo_key_rsa.pub|base64)
+  known_hosts: $(ssh-keyscan -t rsa github.com 2>/dev/null|grep -E '^github\.com'|base64|tr -d '\n')
+  identity: $(cat ${HOME}/.ssh/demo_key_rsa|base64|tr -d '\n')
+  'identity.pub': $(cat ${HOME}/.ssh/demo_key_rsa.pub|base64|tr -d '\n')
 EOF
 ```
 
