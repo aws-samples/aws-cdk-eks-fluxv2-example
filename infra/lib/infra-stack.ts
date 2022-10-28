@@ -57,7 +57,7 @@ export class InfraStack extends Stack {
 
     // Select the private subnets created in our VPC and place our worker nodes there
     const privateSubnets = vpc.selectSubnets({
-      subnetType: ec2.SubnetType.PRIVATE
+      subnetType: ec2.SubnetType.PRIVATE_WITH_NAT
     });
 
     cluster.addNodegroupCapacity('WorkerNodeGroup', {
