@@ -1,6 +1,7 @@
 import { aws_ec2 as ec2, CfnParameter, Stack, StackProps } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { aws_iam as iam } from 'aws-cdk-lib';
+import { KubectlV30Layer } from '@aws-cdk/lambda-layer-kubectl-v30';
 import { aws_eks as eks } from 'aws-cdk-lib';
 import { ClusterAutoscaler } from './addons/cluster-autoscaler';
 import { FluxV2 } from './addons/fluxv2';
@@ -40,8 +41,9 @@ export class InfraStack extends Stack {
     const cluster = new eks.Cluster(this, 'Cluster', {
       vpc: vpc,
       role: clusterRole,
-      version: eks.KubernetesVersion.V1_19,
-      defaultCapacity: 0
+      version: eks.KubernetesVersion.V1_31,
+      defaultCapacity: 0,
+      kubectlLayer: new KubectlV30Layer(this, 'KubectlLayer')
     });
 
     // Worker node IAM role
