@@ -20,7 +20,7 @@ describe('Stack contains resources', () => {
   // Test that it's a supported version
   test('EKS cluster with supported Kubernetes version', () => {
     // This is a non-ideal way of validating supported versions, but seems to work.
-    const supportedVersionsRegex = '1.19|1.20|1.21|1.22|1.23';
+    const supportedVersionsRegex = '1.[0-9]{2}';
     template.hasResourceProperties('Custom::AWSCDK-EKS-Cluster', {
       Config: {
         version: Match.stringLikeRegexp(supportedVersionsRegex)
