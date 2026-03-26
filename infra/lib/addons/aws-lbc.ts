@@ -1,6 +1,6 @@
 import { Construct } from 'constructs';
 import { Aws, StackProps } from 'aws-cdk-lib';
-import { aws_eks as eks } from 'aws-cdk-lib';
+import { aws_eks as eks, aws_iam as iam } from 'aws-cdk-lib';
 
 export interface AWSLoadBalancerControllerProps extends StackProps {
   cluster: eks.Cluster;
@@ -15,9 +15,9 @@ export class AWSLoadBalancerController extends Construct {
       namespace: props.namespace
     });
 
-    sa.role.addManagedPolicy({
-      managedPolicyArn: `arn:aws:iam::${Aws.ACCOUNT_ID}:policy/AWSLoadBalancerControllerIAMPolicy`
-    });
+    sa.role.addManagedPolicy(
+      iam.ManagedPolicy.fromManagedPolicyArn(this, 'AWSLBCPolicy', `arn:aws:iam::${Aws.ACCOUNT_ID}:policy/AWSLoadBalancerControllerIAMPolicy`)
+    );
 
     const chart = props.cluster.addHelmChart('AWSLBCHelmChart', {
       chart: 'aws-load-balancer-controller',
